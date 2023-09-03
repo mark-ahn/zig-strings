@@ -1,12 +1,12 @@
 const std = @import("std");
 const testing = std.testing;
 
-fn hasPrefix(s: []const u8, prefix: []const u8) bool {
+pub fn hasPrefix(s: []const u8, prefix: []const u8) bool {
     if (s.len < prefix.len) return false;
     return std.mem.eql(u8, s[0..prefix.len], prefix);
 }
 
-fn hasSuffix(s: []const u8, suffix: []const u8) bool {
+pub fn hasSuffix(s: []const u8, suffix: []const u8) bool {
     if (s.len < suffix.len) return false;
     return std.mem.eql(u8, s[s.len - suffix.len ..], suffix);
 }
