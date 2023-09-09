@@ -33,26 +33,49 @@ test "trimSuffix" {
     try testing.expect(std.mem.eql(u8, trimSuffix("some-strings-value", "value"), "some-strings-"));
 }
 
-pub fn trimSpace(s: []const u8) []const u8 {
+fn trimFn(s: []const u8, filter: *const fn (u8) bool) @TypeOf(s) {
     if (s.len == 0) return s;
     var start: usize = 0;
     var end = s.len;
     for (s, 0..) |c, i| {
-        if (!std.ascii.isWhitespace(c)) break;
+        if (!filter(c)) break;
         start = i + 1;
     }
     while (start < end) : (end -= 1) {
         const c = s[end - 1];
-        if (!std.ascii.isWhitespace(c)) break;
+        if (!filter(c)) break;
     }
     return s[start..end];
 }
+
+pub fn trimSpace(s: []const u8) @TypeOf(s) {
+    return trimFn(s, std.ascii.isWhitespace);
+}
 test trimSpace {
-    try testing.expect(std.mem.eql(u8, trimSpace("        "), ""));
-    try testing.expect(std.mem.eql(u8, trimSpace(""), ""));
+    try testing.expectEqualSlices(u8, trimSpace("        "), "");
+    try testing.expectEqualSlices(u8, trimSpace(""), "");
     try testing.expectEqualSlices(u8, "any  string", trimSpace("  any  string   "));
     try testing.expectEqualSlices(u8, "any  string", trimSpace("  any  string"));
     try testing.expectEqualSlices(u8, "any  string", trimSpace("any  string   "));
+}
+
+// fn not(comptime T: type, f: *const fn (d: T) bool) @TypeOf(f) {
+//     const local = struct {
+//         fn invert(d: T) bool {
+//             return !f(d);
+//         }
+//     };
+//     return local.invert;
+// }
+fn not_print(c: u8) bool {
+    return !std.ascii.isPrint(c);
+}
+
+pub fn trimNotPrint(s: []const u8) @TypeOf(s) {
+    return trimFn(s, not_print);
+}
+test trimNotPrint {
+    try testing.expectEqualSlices(u8, "some", trimNotPrint("some\x0d"));
 }
 
 pub fn toLower(allocator: std.mem.Allocator, s: []const u8) ![]u8 {
