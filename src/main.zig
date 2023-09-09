@@ -33,6 +33,28 @@ test "trimSuffix" {
     try testing.expect(std.mem.eql(u8, trimSuffix("some-strings-value", "value"), "some-strings-"));
 }
 
+pub fn trimSpace(s: []const u8) []const u8 {
+    if (s.len == 0) return s;
+    var start: usize = 0;
+    var end = s.len;
+    for (s, 0..) |c, i| {
+        if (!std.ascii.isWhitespace(c)) break;
+        start = i + 1;
+    }
+    while (start < end) : (end -= 1) {
+        const c = s[end - 1];
+        if (!std.ascii.isWhitespace(c)) break;
+    }
+    return s[start..end];
+}
+test trimSpace {
+    try testing.expect(std.mem.eql(u8, trimSpace("        "), ""));
+    try testing.expect(std.mem.eql(u8, trimSpace(""), ""));
+    try testing.expectEqualSlices(u8, "any  string", trimSpace("  any  string   "));
+    try testing.expectEqualSlices(u8, "any  string", trimSpace("  any  string"));
+    try testing.expectEqualSlices(u8, "any  string", trimSpace("any  string   "));
+}
+
 pub fn toLower(allocator: std.mem.Allocator, s: []const u8) ![]u8 {
     var v = try allocator.alloc(u8, s.len);
     for (s, 0..) |c, i| {
